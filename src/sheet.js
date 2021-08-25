@@ -70,8 +70,13 @@ exports.mergepush = (keys) => new Promise(async (resolve, reject) => {
       }
 
       if (shouldSave) {
-        rowToSave.push(new Promise((rs, rj) => {
-          row.save((err) => err? rj(err): rs());
+        rowToSave.push(new Promise(async (rs, rj) => {
+          try {
+            await row.save();
+            rs();
+          } catch (err) {
+            rj(err)
+          }
         }));
       }
     }
@@ -86,10 +91,14 @@ exports.mergepush = (keys) => new Promise(async (resolve, reject) => {
 
         langs.forEach((lang) => { rowData[lang] = translate[lang]; });
 
-        rowToSave.push(() => new Promise((rs, rj) => sheet.addRow(rowData, (err) => {
-          if (err) return rj(err);
-          rs();
-        })));
+        rowToSave.push(() => new Promise(async (rs, rj) => {
+          try {
+            await sheet.addRow(rowData);
+            rs();
+          } catch (err) {
+            return rj(err);
+          }
+        }));
       });
     }
 
